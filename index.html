@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKM OCR - Chuyển Hình Ảnh Thành Văn Bản</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Playfair Display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+        
+        /* Glassmorphism gradient effect */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(63, 63, 70, 0.4);
+        }
+        
+        /* Scanning line animation */
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scanner-line {
+            animation: scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        /* Pulse glow */
+        .glow-pulse {
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen font-sans flex flex-col selection:bg-brand-500/30 selection:text-brand-100">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+                        TKM <span class="text-brand-500">OCR</span>
+                    </h1>
+                    <p class="text-xs text-zinc-500 font-medium">Trích xuất văn bản thông minh</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <a href="#history-section" class="text-xs sm:text-sm text-zinc-400 hover:text-zinc-100 flex items-center space-x-2 transition-colors">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span class="hidden sm:inline">Lịch sử quét</span>
+                </a>
+                <span class="h-4 w-px bg-zinc-800"></span>
+                <div class="flex items-center space-x-1 text-xs bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full text-emerald-400 font-semibold">
+                    <span class="relative flex h-2 w-2 mr-1.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    TKM.ai (Trực tuyến)
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+        
+        <!-- Welcome banner -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-brand-950/20 border border-zinc-800 p-6 md:p-8">
+            <div class="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-brand-500/5 to-transparent pointer-events-none"></div>
+            <div class="max-w-3xl relative z-10">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20 mb-3">
+                    Bản Cập Nhật 2026
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+                    Quét ảnh thành văn bản trong nháy mắt
+                </h2>
+                <p class="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                    Không cần gõ lại tài liệu nữa! Hãy kéo thả ảnh, dán từ clipboard hoặc chụp trực tiếp. Công nghệ AI của chúng tôi sẽ trích xuất thông minh, sửa lỗi chính tả, dịch thuật và định dạng lại nội dung ngay lập tức.
+                </p>
+            </div>
+        </div>
+
+        <!-- App Grid Core -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            
+            <!-- LEFT PANEL: Upload & Preview (5 Columns) -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="glass-panel rounded-2xl p-5 flex flex-col h-full min-h-[450px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-file-image text-brand-500"></i> Nguồn hình ảnh
+                        </h3>
+                        <div class="flex gap-2">
+                            <!-- Reset Button -->
+                            <button id="btn-reset" class="text-xs text-zinc-500 hover:text-rose-400 px-2 py-1 rounded transition-colors hidden" title="Xóa ảnh hiện tại">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dropzone Area -->
+                    <div id="dropzone" class="flex-grow border-2 border-dashed border-zinc-800 hover:border-brand-500/50 bg-zinc-950/40 rounded-xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-300 relative group overflow-hidden">
+                        
+                        <!-- Upload Instructions State -->
+                        <div id="dropzone-empty" class="space-y-4 py-8 group-hover:scale-[1.02] transition-transform duration-300">
+                            <div class="mx-auto w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-brand-400 group-hover:border-brand-500/30 transition-colors duration-300 shadow-inner">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-zinc-200">Kéo và thả ảnh vào đây</p>
+                                <p class="text-xs text-zinc-500 mt-1">Hoặc nhấp chuột để chọn tệp từ máy tính</p>
+                            </div>
+                            <div class="flex items-center justify-center gap-2 flex-wrap text-[11px] text-zinc-400 bg-zinc-900 border border-zinc-850 px-3 py-1.5 rounded-lg max-w-[260px] mx-auto">
+                                <span class="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300 font-mono">Ctrl + V</span> dán nhanh từ chụp màn hình
+                            </div>
+                        </div>
+
+                        <!-- Preview State -->
+                        <div id="dropzone-preview" class="hidden w-full h-full absolute inset-0 bg-zinc-950 flex items-center justify-center">
+                            <img id="img-preview" src="" alt="Xem trước ảnh" class="max-w-full max-h-full object-contain z-10 p-2">
+                            <div id="scan-bar" class="hidden absolute left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-indigo-400 to-brand-500 scanner-line z-20"></div>
+                            <!-- Blur overlay during processing -->
+                            <div id="overlay-processing" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3">
+                                <div class="relative w-16 h-16">
+                                    <!-- Rotating outer circle -->
+                                    <div class="absolute inset-0 rounded-full border-4 border-zinc-800 border-t-brand-500 animate-spin"></div>
+                                    <!-- Inner pulsing icon -->
+                                    <div class="absolute inset-2 bg-zinc-900 rounded-full flex items-center justify-center text-brand-400 animate-pulse">
+                                        <i class="fa-solid fa-microchip"></i>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-semibold tracking-wider text-brand-400 uppercase animate-pulse">AI đang xử lý...</span>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Inputs -->
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
+                    </div>
+
+                    <!-- Action buttons under source -->
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <button id="btn-browse" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 text-sm font-semibold text-zinc-300 transition-all">
+                            <i class="fa-solid fa-folder-open text-brand-500"></i> Chọn ảnh
+                        </button>
+                        <button id="btn-camera" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 text-sm font-semibold text-zinc-300 transition-all">
+                            <i class="fa-solid fa-camera text-brand-500"></i> Sử dụng Camera
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Text Output & Magic AI Actions (7 Columns) -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                <div class="glass-panel rounded-2xl p-5 flex flex-col h-full min-h-[450px]">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        <h3 class="text-sm font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-align-left text-brand-500"></i> Kết quả trích xuất
+                        </h3>
+                        
+                        <!-- Extra quick utilities -->
+                        <div class="flex items-center gap-1.5">
+                            <button id="btn-tts" class="text-zinc-400 hover:text-brand-400 p-1.5 rounded-lg hover:bg-zinc-900 transition-all text-xs" title="Đọc văn bản thành tiếng">
+                                <i class="fa-solid fa-volume-high"></i> <span class="hidden sm:inline">Đọc</span>
+                            </button>
+                            <button id="btn-copy" class="text-zinc-400 hover:text-brand-400 p-1.5 rounded-lg hover:bg-zinc-900 transition-all text-xs" title="Sao chép toàn bộ văn bản">
+                                <i class="fa-solid fa-copy"></i> <span class="hidden sm:inline">Sao chép</span>
+                            </button>
+                            <button id="btn-download" class="text-zinc-400 hover:text-brand-400 p-1.5 rounded-lg hover:bg-zinc-900 transition-all text-xs" title="Tải xuống tệp tin .txt">
+                                <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Tải về</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Output Area with Custom Controls -->
+                    <div class="relative flex-grow flex flex-col bg-zinc-950/60 rounded-xl border border-zinc-900 overflow-hidden min-h-[250px]">
+                        
+                        <!-- Text toolbar (Header inside text card) -->
+                        <div class="flex items-center justify-between bg-zinc-950 px-3 py-1.5 border-b border-zinc-900 text-xs text-zinc-500">
+                            <div id="stats-word-count">Sẵn sàng nhận dữ liệu...</div>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1 cursor-pointer hover:text-zinc-300" title="Tự động trích xuất chữ ngay khi bạn nạp hình ảnh vào ứng dụng">
+                                    <input type="checkbox" id="check-auto-scan" checked class="rounded border-zinc-800 bg-zinc-900 text-brand-500 focus:ring-0 focus:ring-offset-0">
+                                    <span class="text-brand-400 font-medium"><i class="fa-solid fa-bolt mr-0.5"></i> Tự động quét</span>
+                                </label>
+                                <span class="h-3 w-px bg-zinc-800"></span>
+                                <label class="flex items-center gap-1 cursor-pointer hover:text-zinc-300">
+                                    <input type="checkbox" id="check-raw-only" class="rounded border-zinc-800 bg-zinc-900 text-brand-500 focus:ring-0 focus:ring-offset-0">
+                                    <span>Chỉ lấy chữ thô</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Main Extracted Text Area -->
+                        <textarea id="output-text" class="flex-grow p-4 bg-transparent resize-none text-sm text-zinc-200 placeholder-zinc-600 focus:ring-0 focus:outline-none leading-relaxed h-full overflow-y-auto" placeholder="Văn bản trích xuất bằng AI sẽ xuất hiện tại đây... Bạn có thể chỉnh sửa trực tiếp nội dung ở bảng này sau khi quét xong."></textarea>
+                    </div>
+
+                    <!-- AI Assistant Presets Bar -->
+                    <div class="mt-4">
+                        <div class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-nodes text-brand-500"></i> Trợ lý AI nâng cao (Chọn sau khi quét ảnh)
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button id="preset-grammar" class="preset-btn flex items-center justify-center gap-1.5 py-1.5 px-2 bg-zinc-900 hover:bg-brand-900/20 border border-zinc-850 hover:border-brand-500/30 rounded-lg text-xs font-medium text-zinc-300 transition-all cursor-not-allowed opacity-50" disabled>
+                                <i class="fa-solid fa-wand-magic-sparkles text-brand-400"></i> Chuốt văn phong
+                            </button>
+                            <button id="preset-summarize" class="preset-btn flex items-center justify-center gap-1.5 py-1.5 px-2 bg-zinc-900 hover:bg-brand-900/20 border border-zinc-850 hover:border-brand-500/30 rounded-lg text-xs font-medium text-zinc-300 transition-all cursor-not-allowed opacity-50" disabled>
+                                <i class="fa-solid fa-compress text-violet-400"></i> Tóm tắt nhanh
+                            </button>
+                            <button id="preset-translate" class="preset-btn flex items-center justify-center gap-1.5 py-1.5 px-2 bg-zinc-900 hover:bg-brand-900/20 border border-zinc-850 hover:border-brand-500/30 rounded-lg text-xs font-medium text-zinc-300 transition-all cursor-not-allowed opacity-50" disabled>
+                                <i class="fa-solid fa-language text-cyan-400"></i> Dịch Việt/Anh
+                            </button>
+                            <button id="preset-table" class="preset-btn flex items-center justify-center gap-1.5 py-1.5 px-2 bg-zinc-900 hover:bg-brand-900/20 border border-zinc-850 hover:border-brand-500/30 rounded-lg text-xs font-medium text-zinc-300 transition-all cursor-not-allowed opacity-50" disabled>
+                                <i class="fa-solid fa-table text-emerald-400"></i> Chuyển dạng bảng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Core Scanning CTA Button -->
+                    <div class="mt-4">
+                        <button id="btn-scan" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-brand-500/40 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <i class="fa-solid fa-bolt text-lg"></i> BẮT ĐẦU TRÍCH XUẤT CHỮ (AI)
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM PANEL: History (Self-contained logs) -->
+        <section id="history-section" class="mt-4 glass-panel rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-bold tracking-wider text-zinc-400 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-history text-brand-500"></i> Lịch sử lưu trữ
+                    </h3>
+                    <span id="history-count" class="bg-zinc-800 text-zinc-400 text-xs px-2 py-0.5 rounded-full font-semibold">0 bản ghi</span>
+                </div>
+                <button id="btn-clear-history" class="text-xs text-zinc-500 hover:text-rose-400 flex items-center gap-1 transition-colors">
+                    <i class="fa-solid fa-trash-can"></i> Xóa toàn bộ lịch sử
+                </button>
+            </div>
+
+            <!-- Empty history state -->
+            <div id="history-empty" class="py-12 flex flex-col items-center justify-center text-center text-zinc-600 border border-dashed border-zinc-900 rounded-xl bg-zinc-950/20">
+                <i class="fa-solid fa-box-open text-3xl mb-3"></i>
+                <p class="text-sm">Lịch sử trống. Các hình ảnh bạn quét sẽ tự động lưu lại tại đây.</p>
+            </div>
+
+            <!-- History Grid -->
+            <div id="history-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden max-h-[300px] overflow-y-auto pr-1">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- CAMERA CAPTURE MODAL -->
+    <div id="camera-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/50">
+                <h3 class="text-sm font-bold tracking-wider uppercase text-zinc-200">
+                    <i class="fa-solid fa-camera mr-2 text-brand-500"></i> Chụp ảnh trực tiếp
+                </h3>
+                <button id="btn-close-camera" class="text-zinc-500 hover:text-zinc-200 transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Video feed box -->
+            <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+                <video id="video-feed" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+                <!-- Loading camera state -->
+                <div id="camera-loading" class="flex flex-col items-center gap-2 text-zinc-500 text-xs">
+                    <div class="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-brand-500 animate-spin"></div>
+                    <span>Đang khởi động Camera...</span>
+                </div>
+            </div>
+            <!-- Modal actions -->
+            <div class="p-4 bg-zinc-950/50 flex justify-center gap-3">
+                <button id="btn-capture" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-circle-dot text-rose-500 animate-pulse"></i> Chụp ảnh ngay
+                </button>
+                <button id="btn-cancel-capture" class="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-750 text-zinc-300 font-semibold text-xs transition-all">
+                    Hủy bỏ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION UTILITY -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none">
+        <!-- Toast template created on-the-fly -->
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-zinc-900 bg-zinc-950/30 py-6 text-center text-xs text-zinc-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>© 2026 TKM OCR. Bảo mật tuyệt đối (Quét hình ảnh trực tiếp không lưu trữ trên máy chủ ngoại vi).</p>
+            <div class="flex gap-4">
+                <span class="hover:text-zinc-400 cursor-pointer">Điều khoản</span>
+                <span class="hover:text-zinc-400 cursor-pointer">Bảo mật</span>
+                <span class="hover:text-zinc-400 cursor-pointer">Phản hồi</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Core state configurations
+        let selectedImageBase64 = null;
+        let selectedImageMime = null;
+        let stream = null; // Media stream for camera
+        const STORAGE_KEY = 'ai_ocr_history_v2';
+        
+        // DOM Selectors
+        const dropzone = document.getElementById('dropzone');
+        const dropzoneEmpty = document.getElementById('dropzone-empty');
+        const dropzonePreview = document.getElementById('dropzone-preview');
+        const imgPreview = document.getElementById('img-preview');
+        const fileInput = document.getElementById('file-input');
+        const btnBrowse = document.getElementById('btn-browse');
+        const btnCamera = document.getElementById('btn-camera');
+        const btnReset = document.getElementById('btn-reset');
+        const btnScan = document.getElementById('btn-scan');
+        const scanBar = document.getElementById('scan-bar');
+        const overlayProcessing = document.getElementById('overlay-processing');
+        
+        const outputText = document.getElementById('output-text');
+        const statsWordCount = document.getElementById('stats-word-count');
+        const checkRawOnly = document.getElementById('check-raw-only');
+        const checkAutoScan = document.getElementById('check-auto-scan');
+        
+        const btnTts = document.getElementById('btn-tts');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnDownload = document.getElementById('btn-download');
+        
+        // Smart Presets
+        const presetGrammar = document.getElementById('preset-grammar');
+        const presetSummarize = document.getElementById('preset-summarize');
+        const presetTranslate = document.getElementById('preset-translate');
+        const presetTable = document.getElementById('preset-table');
+        const presetButtons = [presetGrammar, presetSummarize, presetTranslate, presetTable];
+
+        // Camera Modal DOM
+        const cameraModal = document.getElementById('camera-modal');
+        const videoFeed = document.getElementById('video-feed');
+        const btnCloseCamera = document.getElementById('btn-close-camera');
+        const btnCapture = document.getElementById('btn-capture');
+        const btnCancelCapture = document.getElementById('btn-cancel-capture');
+        const cameraLoading = document.getElementById('camera-loading');
+
+        // History DOM
+        const historyGrid = document.getElementById('history-grid');
+        const historyEmpty = document.getElementById('history-empty');
+        const historyCount = document.getElementById('history-count');
+        const btnClearHistory = document.getElementById('btn-clear-history');
+
+        // Beautiful native non-obtrusive toast notification
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl border flex items-start gap-3 shadow-xl backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto bg-zinc-900/90`;
+            
+            let colorClass = 'border-zinc-800 text-zinc-200';
+            let icon = 'fa-info-circle text-brand-400';
+            
+            if (type === 'success') {
+                colorClass = 'border-emerald-500/30 text-emerald-200';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                colorClass = 'border-rose-500/30 text-rose-200';
+                icon = 'fa-triangle-exclamation text-rose-400';
+            } else if (type === 'warning') {
+                colorClass = 'border-amber-500/30 text-amber-200';
+                icon = 'fa-circle-exclamation text-amber-400';
+            }
+
+            toast.className += ` ${colorClass}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} mt-0.5 text-base flex-shrink-0"></i>
+                <div class="flex-grow">
+                    <p class="text-xs font-semibold leading-relaxed">${message}</p>
+                </div>
+                <button class="text-zinc-500 hover:text-zinc-300 ml-2 text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+
+            // Close listener
+            toast.querySelector('button').addEventListener('click', () => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            });
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('opacity-0', 'translate-y-2');
+            }, 10);
+
+            // Auto close after 4 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('border-brand-500', 'bg-brand-500/5');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-brand-500', 'bg-brand-500/5');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleImageFile(files[0]);
+            }
+        });
+
+        dropzone.addEventListener('click', (e) => {
+            // Prevent trigger if they click the reset button directly
+            if (e.target.closest('#btn-reset')) return;
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+
+        btnBrowse.addEventListener('click', () => fileInput.click());
+
+        // Clipboard paste (Super useful!)
+        window.addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    handleImageFile(blob);
+                    showToast('Đã dán ảnh từ Clipboard thành công!', 'success');
+                    break;
+                }
+            }
+        });
+
+        // Convert file to Base64
+        function handleImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Vui lòng tải lên đúng định dạng ảnh (PNG, JPG, WEBP,...)', 'error');
+                return;
+            }
+
+            selectedImageMime = file.type;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedImageBase64 = e.target.result.split(',')[1];
+                
+                // Show in preview
+                imgPreview.src = e.target.result;
+                dropzoneEmpty.classList.add('hidden');
+                dropzonePreview.classList.remove('hidden');
+                btnReset.classList.remove('hidden');
+                
+                // Alert visual change
+                showToast(`Nạp ảnh thành công: ${file.name}`, 'success');
+                resetScanStates();
+
+                // Auto scan immediately if checked
+                if (checkAutoScan.checked) {
+                    runGeminiOCR();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetScanStates() {
+            outputText.value = '';
+            statsWordCount.textContent = 'Chưa quét ảnh...';
+            // Disable presets until a successful run
+            presetButtons.forEach(btn => {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.disabled = true;
+            });
+        }
+
+        btnReset.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedImageBase64 = null;
+            selectedImageMime = null;
+            imgPreview.src = '';
+            dropzoneEmpty.classList.remove('hidden');
+            dropzonePreview.classList.add('hidden');
+            btnReset.classList.add('hidden');
+            resetScanStates();
+            showToast('Đã dọn dẹp trình duyệt ảnh', 'info');
+        });
+
+        // Camera streaming control
+        btnCamera.addEventListener('click', async () => {
+            cameraModal.classList.remove('hidden');
+            cameraLoading.classList.remove('hidden');
+            videoFeed.classList.add('hidden');
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+                videoFeed.srcObject = stream;
+                videoFeed.classList.remove('hidden');
+                cameraLoading.classList.add('hidden');
+            } catch (err) {
+                console.error("Không mở được camera: ", err);
+                showToast('Không thể kích hoạt Camera. Vui lòng đảm bảo quyền truy cập đã được cấp.', 'error');
+                cameraModal.classList.add('hidden');
+            }
+        });
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            videoFeed.srcObject = null;
+            cameraModal.classList.add('hidden');
+        }
+
+        btnCloseCamera.addEventListener('click', stopCamera);
+        btnCancelCapture.addEventListener('click', stopCamera);
+
+        btnCapture.addEventListener('click', () => {
+            if (!stream) return;
+            
+            // Draw frame on a dynamic canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = videoFeed.videoWidth;
+            canvas.height = videoFeed.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+            
+            // Extract image data
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            selectedImageBase64 = dataUrl.split(',')[1];
+            selectedImageMime = 'image/jpeg';
+            
+            // Set as preview
+            imgPreview.src = dataUrl;
+            dropzoneEmpty.classList.add('hidden');
+            dropzonePreview.classList.remove('hidden');
+            btnReset.classList.remove('hidden');
+            
+            stopCamera();
+            showToast('Chụp ảnh thành công!', 'success');
+            resetScanStates();
+
+            // Auto scan immediately if checked
+            if (checkAutoScan.checked) {
+                runGeminiOCR();
+            }
+        });
+
+
+        // Core fetch call to Gemini Vision Model
+        async function runGeminiOCR(customPrompt = null) {
+            if (!selectedImageBase64) {
+                showToast('Vui lòng chọn hoặc chụp một ảnh trước khi quét!', 'warning');
+                return;
+            }
+
+            setLoadingState(true);
+
+            // Configure API URL (empty key as recommended by specifications)
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            // Handle strict formatting rules
+            let systemInstruction = "Hãy trích xuất toàn bộ văn bản trong bức ảnh này một cách trung thực và chính xác nhất có thể.";
+            if (checkRawOnly.checked) {
+                systemInstruction += " Trả về chữ thô sạch nhất, loại bỏ hoàn toàn các ký tự markdown như chừa tiêu đề đậm, bảng biểu. Trả về dưới dạng thuần văn bản (plain text).";
+            } else {
+                systemInstruction += " Hãy giữ nguyên định dạng Markdown của văn bản nếu có cấu trúc bảng, danh sách, hay phân cấp tiêu đề để văn bản rõ ràng, gọn gàng.";
+            }
+            systemInstruction += " Tuyệt đối KHÔNG trả về các lời giải thích ngoài lề kiểu 'Đây là văn bản...' hoặc 'Dưới đây là...', chỉ xuất văn bản tìm thấy trong ảnh.";
+
+            const defaultPrompt = "Hãy quét ảnh và trả về toàn bộ văn bản có trong ảnh này.";
+            const finalPrompt = customPrompt ? customPrompt : defaultPrompt;
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: finalPrompt },
+                            {
+                                inlineData: {
+                                    mimeType: selectedImageMime,
+                                    data: selectedImageBase64
+                                }
+                            }
+                        ]
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                }
+            };
+
+            // Implementation of exponential backoff helper inside OCR scope
+            let attempt = 0;
+            const maxAttempts = 3;
+            let delay = 1000;
+
+            async function makeRequest() {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && attempt < maxAttempts) {
+                            attempt++;
+                            showToast(`Yêu cầu bị nghẽn (429). Đang thử lại lần ${attempt}...`, 'warning');
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                            return makeRequest();
+                        }
+                        throw new Error(`Mã lỗi HTTP: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const textResult = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (!textResult) {
+                        throw new Error("Mẫu kết quả rỗng từ AI. Có thể ảnh không có chữ rõ ràng.");
+                    }
+
+                    return textResult;
+
+                } catch (err) {
+                    if (attempt < maxAttempts) {
+                        attempt++;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        return makeRequest();
+                    }
+                    throw err;
+                }
+            }
+
+            try {
+                const text = await makeRequest();
+                outputText.value = text;
+                updateWordCount(text);
+                
+                // Successful extract
+                showToast('Trích xuất chữ thành công bằng Gemini Smart AI!', 'success');
+                
+                // Enable assistant presets
+                presetButtons.forEach(btn => {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = false;
+                });
+
+                // Save to Local History
+                saveToHistory(selectedImageBase64, text);
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Quá trình nhận diện chữ thất bại: ${err.message}`, 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                btnScan.disabled = true;
+                btnScan.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> ĐANG TRÍCH XUẤT...`;
+                overlayProcessing.classList.remove('hidden');
+                scanBar.classList.remove('hidden');
+            } else {
+                btnScan.disabled = false;
+                btnScan.innerHTML = `<i class="fa-solid fa-bolt text-lg"></i> BẮT ĐẦU TRÍCH XUẤT CHỮ (AI)`;
+                overlayProcessing.classList.add('hidden');
+                scanBar.classList.add('hidden');
+            }
+        }
+
+        function updateWordCount(text) {
+            if (!text) {
+                statsWordCount.textContent = 'Văn bản trống';
+                return;
+            }
+            const words = text.trim().split(/\s+/).filter(Boolean).length;
+            const chars = text.length;
+            statsWordCount.innerHTML = `<i class="fa-solid fa-calculator mr-1"></i> Số từ: <b class="text-brand-400">${words}</b> | Ký tự: <b class="text-brand-400">${chars}</b>`;
+        }
+
+        btnScan.addEventListener('click', () => runGeminiOCR());
+
+        // Implementing custom downstream actions with Gemini directly on current context
+        async function runSmartPreset(presetType, promptInstruction) {
+            const currentText = outputText.value.trim();
+            if (!currentText) {
+                showToast('Trình soạn thảo trống. Hãy quét văn bản trước!', 'warning');
+                return;
+            }
+
+            setLoadingState(true);
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const userPrompt = `Dưới đây là một đoạn văn bản thô được trích xuất từ hình ảnh:\n\n---\n${currentText}\n---\n\nYêu cầu: ${promptInstruction}\nTrả về duy nhất phần nội dung sau khi xử lý xong. Không chèn lời khuyên, không giải thích gì thêm ngoài văn bản được yêu cầu.`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userPrompt }] }]
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                
+                const result = await response.json();
+                const processedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (processedText) {
+                    outputText.value = processedText;
+                    updateWordCount(processedText);
+                    showToast(`Trợ lý AI: Thực thi tác vụ '${presetType}' thành công!`, 'success');
+                } else {
+                    throw new Error("Không nhận được dữ liệu xử lý.");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(`Không thể thực hiện tác vụ thông minh: ${err.message}`, 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        presetGrammar.addEventListener('click', () => {
+            runSmartPreset('Chuốt văn phong', 'Sửa lại lỗi chính tả tiếng Việt hoặc ngôn ngữ khác trong đoạn văn, sắp xếp lại kết cấu câu chữ cho mượt mà, chuyên nghiệp hơn mà không làm thay đổi ngữ nghĩa gốc.');
+        });
+
+        presetSummarize.addEventListener('click', () => {
+            runSmartPreset('Tóm tắt nhanh', 'Hãy tạo một tóm tắt ngắn gọn, làm nổi bật các ý cốt lõi bằng các dòng gạch đầu dòng từ văn bản gốc bên trên.');
+        });
+
+        presetTranslate.addEventListener('click', () => {
+            runSmartPreset('Dịch Việt/Anh', 'Hãy nhận diện ngôn ngữ chính trong văn bản. Nếu là tiếng Việt, hãy dịch toàn bộ chính xác sang Tiếng Anh học thuật. Ngược lại nếu là tiếng nước ngoài, hãy dịch mượt mà sang Tiếng Việt chuẩn văn phong.');
+        });
+
+        presetTable.addEventListener('click', () => {
+            runSmartPreset('Chuyển dạng bảng', 'Hãy nhận diện và nhóm toàn bộ thông tin có cấu trúc cột, số liệu hoặc dạng danh sách trong đoạn văn bản này thành định dạng bảng biểu Markdown gọn gàng nhất.');
+        });
+
+        // Reliable Clipboard implementation as requested by Canvas CSP
+        btnCopy.addEventListener('click', () => {
+            const textToCopy = outputText.value;
+            if (!textToCopy) {
+                showToast('Không có nội dung để sao chép!', 'warning');
+                return;
+            }
+
+            // Creating a hidden textarea element for document.execCommand('copy') standard
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = textToCopy;
+            tempTextarea.setAttribute('readonly', '');
+            tempTextarea.style.position = 'absolute';
+            tempTextarea.style.left = '-9999px';
+            document.body.appendChild(tempTextarea);
+
+            tempTextarea.select();
+            tempTextarea.setSelectionRange(0, 99999); // Mobile backup
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Đã sao chép văn bản vào khay nhớ tạm thành công!', 'success');
+                } else {
+                    throw new Error('execCommand copy unreturned');
+                }
+            } catch (err) {
+                console.error("Sao chép thất bại: ", err);
+                showToast('Lỗi sao chép cơ sở. Hãy bôi đen chọn tay.', 'error');
+            } finally {
+                document.body.removeChild(tempTextarea);
+            }
+        });
+
+        // Local Speech Synthesizer (TTS)
+        let isSpeaking = false;
+        btnTts.addEventListener('click', () => {
+            const textToSpeak = outputText.value.trim();
+            if (!textToSpeak) {
+                showToast('Trống! Không có văn bản để đọc.', 'warning');
+                return;
+            }
+
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                btnTts.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span class="hidden sm:inline">Đọc</span>`;
+                btnTts.classList.remove('text-brand-400');
+                showToast('Đã dừng đọc văn bản.', 'info');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Try to detect or assign Vietnamese voice
+            const voices = window.speechSynthesis.getVoices();
+            const viVoice = voices.find(v => v.lang.includes('vi') || v.lang.includes('VI'));
+            if (viVoice) utterance.voice = viVoice;
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                btnTts.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span class="hidden sm:inline">Đọc</span>`;
+                btnTts.classList.remove('text-brand-400');
+            };
+
+            utterance.onerror = () => {
+                isSpeaking = false;
+                btnTts.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span class="hidden sm:inline">Đọc</span>`;
+                btnTts.classList.remove('text-brand-400');
+            };
+
+            isSpeaking = true;
+            btnTts.innerHTML = `<i class="fa-solid fa-circle-stop text-rose-500"></i> <span class="hidden sm:inline">Dừng</span>`;
+            btnTts.classList.add('text-brand-400');
+            window.speechSynthesis.speak(utterance);
+            showToast('Đang khởi tạo âm thanh đọc tài liệu...', 'info');
+        });
+
+        // Download as TXT file
+        btnDownload.addEventListener('click', () => {
+            const textToDownload = outputText.value;
+            if (!textToDownload) {
+                showToast('Không có nội dung văn bản để tải xuống!', 'warning');
+                return;
+            }
+
+            const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `smart_ocr_output_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Đã tạo liên kết tải xuống file .txt thành công!', 'success');
+        });
+
+        outputText.addEventListener('input', () => updateWordCount(outputText.value));
+
+
+        // Load history items from LocalStorage
+        function loadHistory() {
+            const historyStr = localStorage.getItem(STORAGE_KEY);
+            const list = historyStr ? JSON.parse(historyStr) : [];
+            
+            historyCount.textContent = `${list.length} bản ghi`;
+
+            if (list.length === 0) {
+                historyEmpty.classList.remove('hidden');
+                historyGrid.classList.add('hidden');
+                return;
+            }
+
+            historyEmpty.classList.add('hidden');
+            historyGrid.classList.remove('hidden');
+            historyGrid.innerHTML = '';
+
+            list.forEach((item, index) => {
+                const wordsCount = item.text.trim().split(/\s+/).filter(Boolean).length;
+                const dateFormatted = new Date(item.timestamp).toLocaleString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit'
+                });
+
+                const div = document.createElement('div');
+                div.className = 'bg-zinc-900 border border-zinc-800 p-3 rounded-xl flex items-center justify-between gap-3 group hover:border-zinc-700 transition-all duration-300';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-grow" onclick="restoreHistoryItem(${index})">
+                        <img src="data:${item.mime || 'image/jpeg'};base64,${item.thumbnail}" class="w-10 h-10 object-cover rounded-lg border border-zinc-800 flex-shrink-0">
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-semibold text-zinc-300 truncate">${item.text.substring(0, 45)}...</p>
+                            <span class="text-[10px] text-zinc-500 block mt-0.5">${dateFormatted} • ${wordsCount} từ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="deleteHistoryItem(${index}, event)" class="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-zinc-850 transition-colors" title="Xóa bản ghi">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                historyGrid.appendChild(div);
+            });
+        }
+
+        // Save a new record
+        function saveToHistory(imageBase64, extractedText) {
+            const historyStr = localStorage.getItem(STORAGE_KEY);
+            let list = historyStr ? JSON.parse(historyStr) : [];
+
+            // Helper to downscale base64 to smaller image thumbnail
+            const img = new Image();
+            img.src = `data:${selectedImageMime};base64,${imageBase64}`;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 60;
+                canvas.height = 60;
+                ctx.drawImage(img, 0, 0, 60, 60);
+                const thumbnailBase64 = canvas.toDataURL('image/jpeg').split(',')[1];
+
+                const record = {
+                    timestamp: Date.now(),
+                    thumbnail: thumbnailBase64,
+                    mime: 'image/jpeg',
+                    fullImage: imageBase64,
+                    fullImageMime: selectedImageMime,
+                    text: extractedText
+                };
+
+                // Add to start of stack
+                list.unshift(record);
+                
+                // Limit records (max 12 to prevent overflowing localStorage)
+                if (list.length > 12) {
+                    list.pop();
+                }
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                loadHistory();
+            };
+        }
+
+        // Delete single item
+        window.deleteHistoryItem = function(index, event) {
+            event.stopPropagation();
+            const historyStr = localStorage.getItem(STORAGE_KEY);
+            if (!historyStr) return;
+            
+            let list = JSON.parse(historyStr);
+            list.splice(index, 1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            loadHistory();
+            showToast('Đã xóa bản ghi lịch sử.', 'info');
+        };
+
+        // Clear all history
+        btnClearHistory.addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEY);
+            loadHistory();
+            showToast('Đã dọn dẹp sạch sẽ lịch sử quét.', 'success');
+        });
+
+        // Restore past item state to the editor view
+        window.restoreHistoryItem = function(index) {
+            const historyStr = localStorage.getItem(STORAGE_KEY);
+            if (!historyStr) return;
+
+            const list = JSON.parse(historyStr);
+            const item = list[index];
+
+            if (item) {
+                selectedImageBase64 = item.fullImage;
+                selectedImageMime = item.fullImageMime;
+                
+                imgPreview.src = `data:${item.fullImageMime};base64,${item.fullImage}`;
+                dropzoneEmpty.classList.add('hidden');
+                dropzonePreview.classList.remove('hidden');
+                btnReset.classList.remove('hidden');
+
+                outputText.value = item.text;
+                updateWordCount(item.text);
+
+                // Enable presets
+                presetButtons.forEach(btn => {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = false;
+                });
+
+                showToast('Đã phục hồi dữ liệu quét được lưu trước đó!', 'success');
+                // Scroll page back up
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        // Initialize App State
+        window.onload = function() {
+            loadHistory();
+            
+            // Web Speech voices need to warm up asynchronously in Chrome/Safari
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => {};
+            }
+        }
+    </script>
+</body>
+</html>
